@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import etcd3
-import time
 import sys
 
 # Conecte ao etcd
