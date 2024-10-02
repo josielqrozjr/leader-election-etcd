@@ -16,13 +16,12 @@ lock_key = '/lock_lideranca'  # Lock para evitar condição de corrida
 tempo_vida = 10  # Variável para armazenar o tempo que o candidato será o líder atual
 
 
-def tentarSerLider():
-    
+def tentar_ser_lider():
     print(f"Candidato {nome_candidato} --> Tentando a liderança...")
     
     # Tentar adquirir um lock antes de se tornar líder
     with etcd.lock(lock_key, ttl=tempo_vida):
-
+        
         # Criar um tempo de expiração para a liderança
         global tempo_lease
         tempo_lease = etcd.lease(tempo_vida)  # O lease dura 10 segundos
@@ -32,18 +31,19 @@ def tentarSerLider():
 
         # Verificar se já existe um líder
         if lider_atual is not None:
-            lider_atual = lider_atual[0].decode('utf-8')
+            lider_atual = lider_atual.decode('utf-8')  # Decodificar o valor de bytes para string
             print(f"O candidato {lider_atual} é o LÍDER...")
             
             # Escutar as mudanças na eleição do líder
-            escutarLider()
+            escutar_lider()
         else:
+            # Não há líder, então o candidato atual se torna o líder
             etcd.put(lider_key, nome_candidato, lease=tempo_lease) # Eleger candidato como líder
             print(f"Candidato {nome_candidato} --> Eu sou o LÍDER!")
-            aguardarTerminar()
+            aguardar_terminar()
 
 
-def aguardarTerminar():
+def aguardar_terminar():
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
@@ -58,29 +58,27 @@ def aguardarTerminar():
         print(f"Candidato {nome_candidato} --> Fim da liderança!")
 
 
-def escutarLider():
-
+def escutar_lider():
     # Usa o watch para monitorar a chave
-    print(f"Verificando mudanças na liderança...")
+    print(f"Candidato {nome_candidato} --> Verificando mudanças na liderança...")
     eventos, parar_escuta = etcd.watch(lider_key)
 
     for evento in eventos:
         if isinstance(evento, etcd3.events.DeleteEvent):
             print(f"Candidato {nome_candidato} --> O líder atual saiu.")
-            tentarSerLider()
+            tentar_ser_lider()
         elif isinstance(evento, etcd3.events.PutEvent):
             lider_atual = etcd.get(lider_key)[0].decode('utf-8')
-            print(f"\nO candidato {lider_atual} é o NOVO LÍDER.")
+            print(f"\nCandidato {lider_atual} é o NOVO LÍDER.")
 
 
 if __name__ == "__main__":
     # Executa a tentativa de ser líder inicialmente
-    tentarSerLider()
+    tentar_ser_lider()
 
     # Aguarda indefinidamente para manter o processo ativo
     try:
         while True:
             time.sleep(1)
-            print("AQUI no LOOP")
     except KeyboardInterrupt:
         print(f"{nome_candidato}: Encerrando processo.")
