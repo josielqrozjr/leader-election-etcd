@@ -34,9 +34,6 @@ def tentarSerLider():
     # Tentar adquirir um lock antes de se tornar líder
     with etcd.lock(lock_key, ttl=tempo_vida):
 
-        # Criar um tempo de expiração para a liderança
-        tempo_lease = etcd.lease(tempo_vida) 
-
         # Armazenar o líder atual
         lider_atual = etcd.get(lider_key)[0]
 
@@ -48,10 +45,15 @@ def tentarSerLider():
             # Escutar as mudanças na eleição do líder
             escutarLider()
         else:
+            # Criar um tempo de expiração para a liderança
+            tempo_lease = etcd.lease(10)
+
             # Não há líder, então o candidato atual se torna o líder
             etcd.put(lider_key, nome_candidato, lease=tempo_lease) # Eleger candidato como líder
+            
             print(f"\nCandidato {nome_candidato} --> Eu sou o LÍDER!")
             tempo_lease.refresh()
+            
             aguardarTerminar()
         
 
@@ -81,7 +83,7 @@ def escutarLider():
             tentarSerLider()
 
 
-# Nome único do candidato (passado como argumento do script)
+# Nome do candidato e caso não seja passado ele define um aleatório
 nome_candidato = sys.argv[1] if len(sys.argv) > 1 else gerarIdCandidato()
 
 if __name__ == "__main__":
