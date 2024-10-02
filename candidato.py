@@ -32,6 +32,9 @@ def tentarSerLider():
     # Tentar adquirir um lock antes de se tornar líder
     with etcd.lock(lock_key, ttl=tempo_vida):
 
+        # Criar um tempo de expiração para a liderança
+        tempo_lease = etcd.lease(tempo_vida) 
+
         # Armazenar o líder atual
         lider_atual = etcd.get(lider_key)[0]
 
@@ -44,7 +47,7 @@ def tentarSerLider():
             escutarLider()
         else:
             # Não há líder, então o candidato atual se torna o líder
-            etcd.put(lider_key, nome_candidato) # Eleger candidato como líder
+            etcd.put(lider_key, nome_candidato, lease=tempo_lease) # Eleger candidato como líder
             print(f"\nCandidato {nome_candidato} --> Eu sou o LÍDER!")
             aguardarTerminar()
 
