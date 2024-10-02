@@ -12,6 +12,8 @@ import etcd3
 import sys
 import random
 
+import etcd3.events
+
 # Conectar ao etcd
 etcd = etcd3.client()
 
@@ -49,14 +51,15 @@ def tentarSerLider():
             # Não há líder, então o candidato atual se torna o líder
             etcd.put(lider_key, nome_candidato, lease=tempo_lease) # Eleger candidato como líder
             print(f"\nCandidato {nome_candidato} --> Eu sou o LÍDER!")
+            tempo_lease.refresh()
             aguardarTerminar()
+        
 
 
 def aguardarTerminar():
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
-        #tempo_lease.refresh()
 
     except KeyboardInterrupt:
         pass
