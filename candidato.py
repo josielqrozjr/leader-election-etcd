@@ -10,12 +10,10 @@
 
 import etcd3
 import sys
+import random
 
-# Conecte ao etcd
+# Conectar ao etcd
 etcd = etcd3.client()
-
-# Nome único do candidato (passado como argumento do script)
-nome_candidato = sys.argv[1] if len(sys.argv) > 1 else 'Candidato'
 
 # Variáveis
 lider_key = '/eleicao_lider'  # Chave para identificar o líder
@@ -23,7 +21,12 @@ lock_key = '/lock_lideranca'  # Lock para evitar condição de corrida
 tempo_vida = 5  # Variável para armazenar o tempo usado no lock
 
 
-def tentar_ser_lider():
+def gerarIdCandidato():
+    id = random.randint(10, 99)
+    return str(id)
+
+
+def tentarSerLider():
     print(f"Candidato {nome_candidato} --> Tentando a liderança...")
     
     # Tentar adquirir um lock antes de se tornar líder
@@ -38,15 +41,15 @@ def tentar_ser_lider():
             print(f"O candidato {lider_atual} é o LÍDER...\n")
             
             # Escutar as mudanças na eleição do líder
-            escutar_lider()
+            escutarLider()
         else:
             # Não há líder, então o candidato atual se torna o líder
             etcd.put(lider_key, nome_candidato) # Eleger candidato como líder
             print(f"\nCandidato {nome_candidato} --> Eu sou o LÍDER!")
-            aguardar_terminar()
+            aguardarTerminar()
 
 
-def aguardar_terminar():
+def aguardarTerminar():
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
@@ -61,7 +64,7 @@ def aguardar_terminar():
         print(f"Candidato {nome_candidato} --> Fim da liderança!")
 
 
-def escutar_lider():
+def escutarLider():
     # Usa o watch para monitorar a chave
     print(f"Candidato {nome_candidato} --> Verificando mudanças na liderança...")
     eventos, parar_escuta = etcd.watch(lider_key)
@@ -69,16 +72,19 @@ def escutar_lider():
     for evento in eventos:
         if isinstance(evento, etcd3.events.DeleteEvent):
             print(f"Candidato {nome_candidato} --> O líder atual saiu.")
-            tentar_ser_lider()
+            tentarSerLider()
 
+
+# Nome único do candidato (passado como argumento do script)
+nome_candidato = sys.argv[1] if len(sys.argv) > 1 else gerarIdCandidato()
 
 if __name__ == "__main__":
     # Executa a tentativa de ser líder inicialmente
-    tentar_ser_lider()
+    tentarSerLider()
 
     # Aguarda indefinidamente para manter o processo ativo
     try:
         while True:
-            tentar_ser_lider()
+            tentarSerLider()
     except KeyboardInterrupt:
         print(f"{nome_candidato}: Encerrando processo.")
