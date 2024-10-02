@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+#---------------------------------------------------
+# Sistemas Distribuídos
+# Code by Josiel Queiroz, Jr
+# BCC - Noite
+# Curitiba, 02 de outubro de 2024
+#---------------------------------------------------
+
+
 import etcd3
 import sys
 
