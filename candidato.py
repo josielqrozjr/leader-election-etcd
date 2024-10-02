@@ -20,7 +20,7 @@ nome_candidato = sys.argv[1] if len(sys.argv) > 1 else 'Candidato'
 # Variáveis
 lider_key = '/eleicao_lider'  # Chave para identificar o líder
 lock_key = '/lock_lideranca'  # Lock para evitar condição de corrida
-tempo_vida = 5  # Variável para armazenar o tempo que o candidato será o líder atual
+tempo_vida = 5  # Variável para armazenar o tempo usado no lock
 
 
 def tentar_ser_lider():
@@ -28,10 +28,6 @@ def tentar_ser_lider():
     
     # Tentar adquirir um lock antes de se tornar líder
     with etcd.lock(lock_key, ttl=tempo_vida):
-        
-        # Criar um tempo de expiração para a liderança
-        #global tempo_lease
-        #tempo_lease = etcd.lease(tempo_vida)  # O lease dura 10 segundos
 
         # Armazenar o líder atual
         lider_atual = etcd.get(lider_key)[0]
