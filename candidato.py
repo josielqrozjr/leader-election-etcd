@@ -62,19 +62,22 @@ def aguardarTerminar():
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
+        escutarLider()
 
     except KeyboardInterrupt:
-        pass
-
-    finally:
         # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
         etcd.delete(lider_key)
         print(f"Candidato {nome_candidato} --> Fim da liderança!")
 
+    '''finally:
+        # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
+        etcd.delete(lider_key)
+        print(f"Candidato {nome_candidato} --> Fim da liderança!")'''
+
 
 def escutarLider():
     # Usa o watch para monitorar a chave
-    print(f"Candidato {nome_candidato} --> Verificando mudanças na liderança...")
+    #print(f"Candidato {nome_candidato} --> Verificando mudanças na liderança...")
     eventos, parar_escuta = etcd.watch(lider_key)
 
     for evento in eventos:
