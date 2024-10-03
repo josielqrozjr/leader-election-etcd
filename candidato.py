@@ -11,9 +11,9 @@
 import etcd3
 import sys
 import random
-import keyboard
 
 import etcd3.events
+
 
 # Conectar ao etcd
 etcd = etcd3.client()
