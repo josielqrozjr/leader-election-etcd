@@ -11,6 +11,7 @@
 import etcd3
 import random
 import sys
+import time
 
 # Conecte ao etcd
 etcd = etcd3.client()
@@ -60,12 +61,13 @@ def aguardar_terminar():
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
         #tempo_lease.refresh()
 
+    except KeyboardInterrupt:
+        pass
+
+    finally:
         # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
         etcd.delete(lider_key)
-        print(f"Candidato {nome_candidato} --> Fim da liderança!\n")
-
-    except KeyboardInterrupt:
-        sys.exit(0)        
+        print(f"Candidato {nome_candidato} --> Fim da liderança!\n")              
 
 
 def escutar_lider():
@@ -90,6 +92,6 @@ if __name__ == "__main__":
     # Aguarda indefinidamente para manter o processo ativo
     try:
         while True:
-            tentar_ser_lider()
+            time.sleep(1)
     except KeyboardInterrupt:
-        print(f"{nome_candidato}: Encerrando processo.")
+        print(f"\n{nome_candidato}: Encerrando processo.")
