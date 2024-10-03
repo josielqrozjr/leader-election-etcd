@@ -59,10 +59,12 @@ def tentarSerLider():
 
 
 def aguardarTerminar():
+
+    escutarLider()
+    
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
-        escutarLider()
 
     except KeyboardInterrupt:
         # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
