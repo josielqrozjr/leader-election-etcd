@@ -63,12 +63,14 @@ def aguardarTerminar():
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
-        
+
+    except KeyboardInterrupt:
+        pass
+
+    finally:
         # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
         etcd.delete(lider_key)
         print(f"Candidato {nome_candidato} --> Fim da liderança!")
-
-    except KeyboardInterrupt:
         sys.exit(0)
 
 
