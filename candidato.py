@@ -9,19 +9,17 @@
 
 
 import etcd3
-import sys
 import random
+import sys
 
-import etcd3.events
-
-
-# Conectar ao etcd
+# Conecte ao etcd
 etcd = etcd3.client()
+
 
 # Variáveis
 lider_key = '/eleicao_lider'  # Chave para identificar o líder
 lock_key = '/lock_lideranca'  # Lock para evitar condição de corrida
-tempo_vida = 5  # Variável para armazenar o tempo usado no lock
+tempo_vida = 5  # Variável para armazenar o tempo que o candidato será o líder atual
 
 
 def gerarIdCandidato():
@@ -29,11 +27,15 @@ def gerarIdCandidato():
     return str(id)
 
 
-def tentarSerLider():
+def tentar_ser_lider():
     print(f"Candidato {nome_candidato} --> Tentando a liderança...")
     
     # Tentar adquirir um lock antes de se tornar líder
     with etcd.lock(lock_key, ttl=tempo_vida):
+        
+        # Criar um tempo de expiração para a liderança
+        #global tempo_lease
+        #tempo_lease = etcd.lease(tempo_vida)  # O lease dura 10 segundos
 
         # Armazenar o líder atual
         lider_atual = etcd.get(lider_key)[0]
@@ -44,25 +46,19 @@ def tentarSerLider():
             print(f"O candidato {lider_atual} é o LÍDER...\n")
             
             # Escutar as mudanças na eleição do líder
-            escutarLider()
+            escutar_lider()
         else:
-            # Criar um tempo de expiração para a liderança
-            tempo_lease = etcd.lease(10)
-
             # Não há líder, então o candidato atual se torna o líder
-            etcd.put(lider_key, nome_candidato, lease=tempo_lease) # Eleger candidato como líder
-            
+            etcd.put(lider_key, nome_candidato) # Eleger candidato como líder
             print(f"\nCandidato {nome_candidato} --> Eu sou o LÍDER!")
-            tempo_lease.refresh()
-            
-            aguardarTerminar()
-        
+            aguardar_terminar()
 
-def aguardarTerminar():
 
+def aguardar_terminar():
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
+        #tempo_lease.refresh()
 
     except KeyboardInterrupt:
         pass
@@ -71,30 +67,30 @@ def aguardarTerminar():
         # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
         etcd.delete(lider_key)
         print(f"Candidato {nome_candidato} --> Fim da liderança!")
-        sys.exit(0)
 
 
-def escutarLider():
+def escutar_lider():
     # Usa o watch para monitorar a chave
-    #print(f"Candidato {nome_candidato} --> Verificando mudanças na liderança...")
+    print(f"Candidato {nome_candidato} --> Verificando mudanças na liderança...")
     eventos, parar_escuta = etcd.watch(lider_key)
 
     for evento in eventos:
         if isinstance(evento, etcd3.events.DeleteEvent):
-                print(f"O líder atual saiu ou expirou a liderança!")
-                tentarSerLider()
+            print(f"Candidato {nome_candidato} --> O líder atual saiu.")
+            tentar_ser_lider()
 
 
 # Nome do candidato e caso não seja passado ele define um aleatório
 nome_candidato = sys.argv[1] if len(sys.argv) > 1 else gerarIdCandidato()
 
+
 if __name__ == "__main__":
     # Executa a tentativa de ser líder inicialmente
-    tentarSerLider()
+    tentar_ser_lider()
 
     # Aguarda indefinidamente para manter o processo ativo
     try:
         while True:
-            tentarSerLider()
+            tentar_ser_lider()
     except KeyboardInterrupt:
-        print(f"\nCandidato {nome_candidato}: Encerrando processo.")
+        print(f"{nome_candidato}: Encerrando processo.")
