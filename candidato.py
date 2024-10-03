@@ -55,26 +55,23 @@ def tentarSerLider():
             print(f"\nCandidato {nome_candidato} --> Eu sou o LÍDER!")
             tempo_lease.refresh()
             
-            escutarLider()
+            aguardarTerminar()
         
 
-'''def aguardarTerminar():
-
-    escutarLider()
+def aguardarTerminar():
 
     # Aguarda até que o usuário pressione qualquer tecla ou CTRL+C
     try:
         input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
 
     except KeyboardInterrupt:
-        # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
-        etcd.delete(lider_key)
-        print(f"Candidato {nome_candidato} --> Fim da liderança!")
+        pass
 
     finally:
         # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
         etcd.delete(lider_key)
-        print(f"Candidato {nome_candidato} --> Fim da liderança!")'''
+        print(f"Candidato {nome_candidato} --> Fim da liderança!")
+        sys.exit(0)
 
 
 def escutarLider():
@@ -84,14 +81,8 @@ def escutarLider():
 
     for evento in eventos:
         if isinstance(evento, etcd3.events.DeleteEvent):
-                print(f"Candidato {nome_candidato} --> O líder atual saiu.")
+                print(f"O líder atual saiu ou expirou a liderança!")
                 tentarSerLider()
-        elif evento is None:
-            input(f"Candidato {nome_candidato} --> Pressione qualquer tecla para terminar\n")
-            
-            # Deleta a chave de líder ao terminar, permitindo que outro candidato assuma
-            etcd.delete(lider_key)
-            print(f"Candidato {nome_candidato} --> Fim da liderança!")
 
 
 # Nome do candidato e caso não seja passado ele define um aleatório
